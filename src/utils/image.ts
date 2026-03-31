@@ -18,5 +18,5 @@ export function normalizeImageUrl(url: string | null | undefined): string {
   }
 
   // Relative path - convert to backend media URL
-  return `http://localhost:8000/media/${url}`;
+  return `https://midoghanam.pythonanywhere.com/media/${url}`;
 }

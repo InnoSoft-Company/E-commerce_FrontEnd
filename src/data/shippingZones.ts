@@ -8,7 +8,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? "https://midoghanam.pythonanywhere.com/api";
 
 export interface ShippingZone {
   id?:         number;

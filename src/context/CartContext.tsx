@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://midoghanam.pythonanywhere.com/api";
 
 export interface CartItem {
   id: number;
