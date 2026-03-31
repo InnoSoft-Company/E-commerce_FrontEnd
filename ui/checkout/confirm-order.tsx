@@ -24,7 +24,7 @@ export default function ConfirmOrder({
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
-    const number = 1097182681; // رقم المتجر على واتساب
+    const number = 1097182681; 
 
     const productsMessage = cart.map(item => 
       `المنتج: ${item.name}\nالمقاس: ${item.size}\nاللون: ${item.color}\nالكمية: ${item.quantity}\nالسعر: ${item.price} ج.م\n`

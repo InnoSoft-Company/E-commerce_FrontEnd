@@ -8,8 +8,7 @@ const nextConfig: NextConfig = {
     unoptimized: process.env.NODE_ENV === "development",
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
-      { protocol: "http", hostname: "localhost", port: "8000" },
-      { protocol: "http", hostname: "127.0.0.1", port: "8000" },
+      { protocol: "https", hostname: "midoghanam.pythonanywhere.com" },
     ],
   },
 };
