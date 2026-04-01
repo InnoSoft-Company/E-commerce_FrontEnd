@@ -5,16 +5,42 @@ import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, X } from "lucide-rea
 import { useCart } from "@/src/context/CartContext";
 import Image from "next/image";
 import { normalizeImageUrl } from "@/src/utils/image";
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
+
+interface CouponResponse {
+  code: string;
+  discount: number;
+  discount_type: 'fixed' | 'percentage';
+  active?: boolean;
+  expiry?: string;
+}
+
+interface AppliedCoupon {
+  code: string;
+  discount: number;
+  type: 'fixed' | 'percentage';
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, getCartTotal } = useCart();
   const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<{code: string, discount: number, type: 'fixed' | 'percentage'} | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [couponError, setCouponError] = useState("");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
-  const applyCoupon = async () => {
+  // Memoize price calculations
+  const { subtotal, discountAmount, total } = useMemo(() => {
+    const sub = getCartTotal();
+    const discount = appliedCoupon ? 
+      (appliedCoupon.type === 'percentage' ? (sub * appliedCoupon.discount) / 100 : appliedCoupon.discount) 
+      : 0;
+    const tot = Math.max(0, sub - discount);
+    return { subtotal: sub, discountAmount: discount, total: tot };
+  }, [getCartTotal, appliedCoupon]);
+
+  const applyCoupon = useCallback(async () => {
     if (!couponCode.trim()) {
       setCouponError("يرجى إدخال كود الخصم");
       return;
@@ -24,11 +50,9 @@ export default function CartPage() {
     setCouponError("");
 
     try {
-      // Fetch real coupons from API
       const token = localStorage.getItem("blanko_access");
-      const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
       
-      let coupons = [];
+      let coupons: CouponResponse[] = [];
       try {
         const res = await fetch(`${API_URL}/coupons/`, {
           headers: { 
@@ -38,53 +62,32 @@ export default function CartPage() {
         });
         if (res.ok) {
           const data = await res.json();
-          // Handle both array and paginated response
-          const couponList = Array.isArray(data) ? data : (data.results || []);
-          coupons = couponList.filter((coupon: any) => {
-            // Django REST framework typically uses 'active' not 'is_active'
+          const couponList: CouponResponse[] = Array.isArray(data) ? data : (data.results || []);
+          coupons = couponList.filter((coupon) => {
             const isActive = coupon.active !== false;
-            // Django uses 'expiry' not 'expires_at'
             const notExpired = !coupon.expiry || new Date(coupon.expiry) > new Date();
             return isActive && notExpired;
           });
-          console.log('Successfully loaded coupons from API:', coupons.map((c: any) => c.code));
-        } else {
-          console.log('API responded with error:', res.status, res.statusText);
         }
       } catch (err) {
         console.error('Failed to fetch coupons from API:', err);
       }
 
-      // Remove fallback - only use database coupons
-      // if (coupons.length === 0) {
-      //   coupons = [
-      //     { code: 'SAVE20', discount: 20, discount_type: 'fixed' },
-      //     { code: 'SAVE10', discount: 10, discount_type: 'percentage' },
-      //     { code: 'WELCOME', discount: 50, discount_type: 'fixed' },
-      //   ];
-      // }
-
       const normalizedCode = couponCode.toUpperCase().trim();
-      console.log('Applying coupon:', normalizedCode); 
-      console.log('Available coupons:', coupons.map((c: any) => c.code)); 
+      const coupon = coupons.find((c) => c.code.toUpperCase() === normalizedCode);
       
-      const coupon = coupons.find((c: any) => c.code.toUpperCase() === normalizedCode);
       if (coupon) {
-        console.log('Coupon found:', coupon); 
-        const couponData: {code: string, discount: number, type: 'fixed' | 'percentage'} = { 
+        const couponData: AppliedCoupon = { 
           code: coupon.code, 
           discount: Number(coupon.discount), 
           type: coupon.discount_type === 'percentage' ? 'percentage' : 'fixed' 
         };
         setAppliedCoupon(couponData);
-        // Save to localStorage for checkout
         localStorage.setItem('blanko_applied_coupon', JSON.stringify(couponData));
-        // Set flag that user explicitly applied this coupon in cart
         localStorage.setItem('blanko_user_applied_coupon', 'true');
         setCouponCode("");
         setCouponError("");
       } else {
-        console.log('Coupon not found'); 
         setCouponError("كود الخصم غير صالح");
       }
     } catch (error) {
@@ -93,15 +96,14 @@ export default function CartPage() {
     } finally {
       setIsApplyingCoupon(false);
     }
-  };
+  }, [couponCode]);
 
-  const removeCoupon = () => {
+  const removeCoupon = useCallback(() => {
     setAppliedCoupon(null);
     setCouponError("");
-    // Remove from localStorage
     localStorage.removeItem('blanko_applied_coupon');
     localStorage.removeItem('blanko_user_applied_coupon');
-  };
+  }, []);
 
   if (cart.length === 0) return (
     <div className="cart-page" style={{ minHeight: "70vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "0 24px" }}>
@@ -118,12 +120,6 @@ export default function CartPage() {
       </Link>
     </div>
   );
-
-  const subtotal = getCartTotal();
-  const discountAmount = appliedCoupon ? 
-    (appliedCoupon.type === 'percentage' ? (subtotal * appliedCoupon.discount) / 100 : appliedCoupon.discount) 
-    : 0;
-  const total = Math.max(0, subtotal - discountAmount);
 
   return (
     <div className="cart-page">

@@ -1,18 +1,22 @@
 export interface Product {
   id: number;
   name: string;
-  price: number;
-  category: string;
+  price: string | number;
+  category: number;
+  category_name?: string;
   image: string;
   images: string[];
   description: string;
-  sizes: string[];
-  colors: string[];
+  sizes: string[] | string;
+  colors: string[] | string;
   rating: number;
   reviews: number;
   inStock: boolean;
+  in_stock?: boolean;
   featured: boolean;
   trending: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const products: Product[] = [
@@ -20,7 +24,8 @@ export const products: Product[] = [
     id: 1,
     name: "Classic White Shirt",
     price: 89.99,
-    category: "Women",
+    category: 1,
+    category_name: "Women",
     image: "https://images.unsplash.com/photo-1669059921524-327a4c52cff3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3b21hbiUyMHdoaXRlJTIwc2hpcnQlMjBtaW5pbWFsfGVufDF8fHx8MTc3Mjk4ODMyMnww&ixlib=rb-4.1.0&q=80&w=1080",
     images: [
       "https://images.unsplash.com/photo-1669059921524-327a4c52cff3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3b21hbiUyMHdoaXRlJTIwc2hpcnQlMjBtaW5pbWFsfGVufDF8fHx8MTc3Mjk4ODMyMnww&ixlib=rb-4.1.0&q=80&w=1080",
@@ -39,7 +44,8 @@ export const products: Product[] = [
     id: 2,
     name: "Elegant Summer Dress",
     price: 149.99,
-    category: "Women",
+    category: 1,
+    category_name: "Women",
     image: "https://images.unsplash.com/photo-1720005398225-4ea01c9d2b8f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwd29tYW4lMjBkcmVzcyUyMGZhc2hpb258ZW58MXx8fHwxNzcyODgxNjA4fDA&ixlib=rb-4.1.0&q=80&w=1080",
     images: [
       "https://images.unsplash.com/photo-1720005398225-4ea01c9d2b8f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwd29tYW4lMjBkcmVzcyUyMGZhc2hpb258ZW58MXx8fHwxNzcyODgxNjA4fDA&ixlib=rb-4.1.0&q=80&w=1080",
@@ -58,7 +64,8 @@ export const products: Product[] = [
     id: 3,
     name: "Men's Casual Jacket",
     price: 199.99,
-    category: "Men",
+    category: 2,
+    category_name: "Men",
     image: "https://images.unsplash.com/photo-1632934330201-a641618914d3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZW4lMjBjYXN1YWwlMjBqYWNrZXQlMjBjbG90aGluZ3xlbnwxfHx8fDE3NzI5NTgxMDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
     images: [
       "https://images.unsplash.com/photo-1632934330201-a641618914d3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZW4lMjBjYXN1YWwlMjBqYWNrZXQlMjBjbG90aGluZ3xlbnwxfHx8fDE3NzI5NTgxMDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
@@ -76,7 +83,8 @@ export const products: Product[] = [
     id: 4,
     name: "Stylish Knit Sweater",
     price: 119.99,
-    category: "Women",
+    category: 1,
+    category_name: "Women",
     image: "https://images.unsplash.com/photo-1764974345389-09da4244809c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHlsaXNoJTIwc3dlYXRlciUyMGtuaXR3ZWFyfGVufDF8fHx8MTc3Mjk4ODMyMXww&ixlib=rb-4.1.0&q=80&w=1080",
     images: [
       "https://images.unsplash.com/photo-1764974345389-09da4244809c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHlsaXNoJTIwc3dlYXRlciUyMGtuaXR3ZWFyfGVufDF8fHx8MTc3Mjk4ODMyMXww&ixlib=rb-4.1.0&q=80&w=1080",
@@ -94,7 +102,8 @@ export const products: Product[] = [
     id: 5,
     name: "Premium Denim Jeans",
     price: 129.99,
-    category: "Men",
+    category: 2,
+    category_name: "Men",
     image: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZW5pbSUyMGplYW5zJTIwY2xvdGhpbmd8ZW58MXx8fHwxNzcyOTg4MzIyfDA&ixlib=rb-4.1.0&q=80&w=1080",
     images: [
       "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZW5pbSUyMGplYW5zJTIwY2xvdGhpbmd8ZW58MXx8fHwxNzcyOTg4MzIyfDA&ixlib=rb-4.1.0&q=80&w=1080",
@@ -112,7 +121,8 @@ export const products: Product[] = [
     id: 6,
     name: "Leather Handbag",
     price: 249.99,
-    category: "Accessories",
+    category: 3,
+    category_name: "Accessories",
     image: "https://images.unsplash.com/photo-1559563458-527698bf5295?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmYXNoaW9uJTIwYWNjZXNzb3JpZXMlMjBiYWd8ZW58MXx8fHwxNzcyOTg4MzIyfDA&ixlib=rb-4.1.0&q=80&w=1080",
     images: [
       "https://images.unsplash.com/photo-1559563458-527698bf5295?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmYXNoaW9uJTIwYWNjZXNzb3JpZXMlMjBiYWd8ZW58MXx8fHwxNzcyOTg4MzIyfDA&ixlib=rb-4.1.0&q=80&w=1080",
@@ -130,7 +140,8 @@ export const products: Product[] = [
     id: 7,
     name: "Kids Fashion Set",
     price: 79.99,
-    category: "Kids",
+    category: 4,
+    category_name: "Kids",
     image: "https://images.unsplash.com/photo-1733924304841-7320116fbe69?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxraWRzJTIwY2hpbGRyZW4lMjBjbG90aGluZ3xlbnwxfHx8fDE3NzI5ODgzMjJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
     images: [
       "https://images.unsplash.com/photo-1733924304841-7320116fbe69?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxraWRzJTIwY2hpbGRyZW4lMjBjbG90aGluZ3xlbnwxfHx8fDE3NzI5ODgzMjJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
@@ -148,7 +159,8 @@ export const products: Product[] = [
     id: 8,
     name: "Premium Sneakers",
     price: 179.99,
-    category: "Accessories",
+    category: 3,
+    category_name: "Accessories",
     image: "https://images.unsplash.com/photo-1722489292298-d809c370aef5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsZWF0aGVyJTIwc2hvZXMlMjBzbmVha2Vyc3xlbnwxfHx8fDE3NzI5ODgzMjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
     images: [
       "https://images.unsplash.com/photo-1722489292298-d809c370aef5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsZWF0aGVyJTIwc2hvZXMlMjBzbmVha2Vyc3xlbnwxfHx8fDE3NzI5ODgzMjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
@@ -166,7 +178,8 @@ export const products: Product[] = [
     id: 9,
     name: "Winter Coat",
     price: 299.99,
-    category: "Women",
+    category: 1,
+    category_name: "Women",
     image: "https://images.unsplash.com/photo-1543849877-4097ae9f2b73?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3b21hbiUyMGNvYXQlMjB3aW50ZXIlMjBmYXNoaW9ufGVufDF8fHx8MTc3Mjk4ODMyNHww&ixlib=rb-4.1.0&q=80&w=1080",
     images: [
       "https://images.unsplash.com/photo-1543849877-4097ae9f2b73?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3b21hbiUyMGNvYXQlMjB3aW50ZXIlMjBmYXNoaW9ufGVufDF8fHx8MTc3Mjk4ODMyNHww&ixlib=rb-4.1.0&q=80&w=1080",
@@ -184,7 +197,8 @@ export const products: Product[] = [
     id: 10,
     name: "Fashion Model Collection",
     price: 399.99,
-    category: "Women",
+    category: 1,
+    category_name: "Women",
     image: "https://images.unsplash.com/photo-1614252369339-5929dd28c0c3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmYXNoaW9uJTIwbW9kZWwlMjBibGFjayUyMGJhY2tncm91bmR8ZW58MXx8fHwxNzcyOTg4MzI0fDA&ixlib=rb-4.1.0&q=80&w=1080",
     images: [
       "https://images.unsplash.com/photo-1614252369339-5929dd28c0c3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmYXNoaW9uJTIwbW9kZWwlMjBibGFjayUyMGJhY2tncm91bmR8ZW58MXx8fHwxNzcyOTg4MzI0fDA&ixlib=rb-4.1.0&q=80&w=1080",

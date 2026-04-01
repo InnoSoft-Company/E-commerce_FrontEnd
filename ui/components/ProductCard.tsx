@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Heart, ShoppingCart, Eye, Zap } from "lucide-react";
 import { Product } from "@/src/data/products";
@@ -40,7 +41,7 @@ const colorHex: Record<string, string> = {
 };
 
 // دالة لتحويل أي قيمة إلى مصفوفة
-function ensureArray(value: any): string[] {
+function ensureArray(value: string | string[] | null | undefined): string[] {
   if (!value) return [];
   if (Array.isArray(value)) return value;
   if (typeof value === "string") {
@@ -60,6 +61,9 @@ export function ProductCard({ product }: { product: Product }) {
   const router = useRouter();
   const inWishlist = isInWishlist(product.id);
 
+  // Convert price to number
+  const numericPrice = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
+
   // Navigate to product page
   const goToProduct = () => router.push(`/product/${product.id}`);
 
@@ -74,7 +78,7 @@ export function ProductCard({ product }: { product: Product }) {
 
         {/* Image wrapper */}
         <div className="pc-img-wrap">
-          <img src={normalizeImageUrl(product.image)} alt={product.name} className="pc-img" />
+          <Image src={normalizeImageUrl(product.image)} alt={product.name} className="pc-img" width={300} height={300} />
 
           {/* Badges */}
           <div className="pc-badges">
@@ -87,7 +91,7 @@ export function ProductCard({ product }: { product: Product }) {
           <div className="pc-actions">
             <button
               onClick={e => stopAndRun(e, () =>
-                inWishlist ? removeFromWishlist(product.id) : addToWishlist({ id: product.id, name: product.name, price: product.price, image: product.image })
+                inWishlist ? removeFromWishlist(product.id) : addToWishlist({ id: product.id, name: product.name, price: numericPrice, image: product.image })
               )}
               className={`pc-action-btn${inWishlist ? " active" : ""}`} title="المفضلة"
             >
@@ -96,7 +100,7 @@ export function ProductCard({ product }: { product: Product }) {
 
             {product.inStock && (
               <button
-                onClick={e => stopAndRun(e, () => addToCart(product.id, product.name, product.price, product.image, product.sizes[0] || "", product.colors[0] || ""))}
+                onClick={e => stopAndRun(e, () => addToCart(product.id, product.name, numericPrice, product.image, ensureArray(product.sizes)[0] || "", ensureArray(product.colors)[0] || ""))}
                 className="pc-action-btn" title="أضف للسلة"
               >
                 <ShoppingCart size={15} strokeWidth={2} />
@@ -115,7 +119,7 @@ export function ProductCard({ product }: { product: Product }) {
           {/* Quick Add */}
           {product.inStock && (
             <button
-              onClick={e => stopAndRun(e, () => addToCart(product.id, product.name, product.price, product.image, product.sizes[0] || "", ensureArray(product.colors)[0] || ""))}
+              onClick={e => stopAndRun(e, () => addToCart(product.id, product.name, numericPrice, product.image, ensureArray(product.sizes)[0] || "", ensureArray(product.colors)[0] || ""))}
               className="pc-quick-add"
             >
               <Zap size={14} fill="currentColor" /> أضف للسلة فورًا
@@ -142,8 +146,8 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
 
       <style>{`
-        .pc-card { border-radius:12px; overflow:hidden; transition:box-shadow 0.3s; }
-        .pc-card:hover { box-shadow:0 12px 40px rgba(15,23,42,0.13); }
+        .pc-card { border-radius:12px; overflow:hidden; transition:box-shadow 0.3s;}
+        
 
         .pc-img-wrap { position:relative; aspect-ratio:3/4; overflow:hidden; background:#f1f5f9; border-radius:12px; }
         .pc-img { width:100%; height:100%; object-fit:cover; transition:transform 0.6s ease; display:block; }

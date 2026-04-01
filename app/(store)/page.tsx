@@ -15,7 +15,7 @@ import { products as staticProducts } from "@/src/data/products";
 function toLocal(p: Product) {
   return {
     ...p,
-    price:   parseFloat(p.price as any),
+    price:   typeof p.price === 'string' ? parseFloat(p.price) : p.price,
     inStock: p.in_stock,
   };
 }
@@ -26,10 +26,10 @@ export default function HomePage() {
 
   useEffect(() => {
     productsApi.list({ featured:"true" })
-      .then(res => { if (res.results?.length) setFeatured(res.results.map(toLocal) as any); })
+      .then(res => { if (res.results?.length) setFeatured(res.results.map(toLocal)); })
       .catch(() => {});
     productsApi.list({ trending:"true" })
-      .then(res => { if (res.results?.length) setTrending(res.results.map(toLocal) as any); })
+      .then(res => { if (res.results?.length) setTrending(res.results.map(toLocal)); })
       .catch(() => {});
   }, []);
 
@@ -38,9 +38,9 @@ export default function HomePage() {
       <Hero />
       <Promises />
       <Categories />
-      <Featured featured={featured as any} />
+      <Featured featured={featured} />
       <PromoSplit />
-      <Trending trending={trending as any} />
+      <Trending trending={trending} />
       <Testimonials />
     </div>
   );

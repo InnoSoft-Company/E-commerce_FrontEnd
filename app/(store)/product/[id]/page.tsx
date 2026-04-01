@@ -1,9 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Package, RotateCcw, Shield } from "lucide-react";
-import { productsApi, type Product as ApiProduct } from "@/src/lib/api";
 import { products as staticProducts } from "@/src/data/products";
 import { useCart } from "@/src/context/CartContext";
 import { useWishlist } from "@/src/context/WishlistContext";
@@ -12,6 +11,7 @@ import Images from "@/ui/product/images";
 import Info from "@/ui/product/info";
 import QuantityAdd from "@/ui/product/quantity-add";
 import { useAuth } from "@/src/context/AuthContext";
+import { Product, productsApi } from "@/src/lib/api";
 
 const colorHex: Record<string,string> = {
   // الألوان الأساسية
@@ -46,8 +46,13 @@ const colorHex: Record<string,string> = {
   Linen:"#faf0e6", WhiteSmoke:"#f5f5f5",
 };
 
-function toLocal(p: ApiProduct) {
-  return { ...p, price: parseFloat(p.price as any), inStock: p.in_stock };
+function toLocal(p: Product): Product {
+  return {
+    ...p,
+    price: typeof p.price === "string" ? p.price : String(p.price),
+    in_stock: p.in_stock,
+    inStock: p.in_stock,
+  };
 }
 
 export default function ProductDetailPage() {
@@ -64,8 +69,8 @@ export default function ProductDetailPage() {
     }
   }, [authLoading, isAuthenticated, id, router]);
 
-  const [product, setProduct]     = useState<any>(fixProduct(staticProducts.find(p => p.id === Number(id))));
-  const [related,  setRelated]    = useState<any[]>([]);
+  const [product, setProduct]     = useState<Product | null>(null);
+  const [related,  setRelated]    = useState<Product[]>([]);
   const [loading,  setLoading]    = useState(true);
   const [selectedSize,  setSelectedSize]  = useState("");
   const [selectedColor, setSelectedColor] = useState("");
@@ -74,7 +79,7 @@ export default function ProductDetailPage() {
   const [added,  setAdded]        = useState(false);
 
   // معالجة القيم الغير طبيعية في الألوان والمقاسات
-  function fixArray(arr: any): string[] {
+  function fixArray(arr: string | string[]): string[] {
     if (!arr) return [];
     if (typeof arr === 'string') {
       // Handle string representations of arrays
@@ -104,40 +109,81 @@ export default function ProductDetailPage() {
     }
     return [];
   }
-  function fixProduct(p: any) {
-    if (!p) return p;
-    const fixed = {
+  const fixProduct = useCallback((p: Product | null): Product | null => {
+    if (!p) return null;
+    // Get the sizes as array
+    const sizes = Array.isArray(p.sizes) ? p.sizes : fixArray(p.sizes as string);
+    const colors = Array.isArray(p.colors) ? p.colors : fixArray(p.colors as string);
+    
+    const fixed: Product = {
       ...p,
-      sizes: fixArray(p.sizes),
-      colors: fixArray(p.colors),
+      sizes,
+      colors,
+      price: typeof p.price === "string" ? p.price : String(p.price),
+      category: typeof p.category === "number" ? p.category : 1,
+      category_name: p.category_name || "",
+      in_stock: p.in_stock ?? (p.inStock ?? false),
+      inStock: p.in_stock ?? (p.inStock ?? false),
     };
     console.log("Product data:", p);
     console.log("Fixed sizes:", fixed.sizes);
     console.log("Fixed colors:", fixed.colors);
     return fixed;
-  }
+  }, []);
 
   useEffect(() => {
-    productsApi.get(Number(id))
-      .then(p => {
+    let isMounted = true;
+    
+    const loadProduct = async () => {
+      try {
+        const p = await productsApi.get(Number(id));
         const local = fixProduct(toLocal(p));
-        setProduct(local);
-        setSelectedColor(local.colors?.[0] ?? "");
-        // related
-        return productsApi.list({ category: p.category_name, sort:"newest" });
-      })
-      .then(res => {
-        const items = (res.results ?? res as any).map(toLocal).map(fixProduct).filter((p: any) => p.id !== Number(id)).slice(0,4);
-        setRelated(items);
-      })
-      .catch(() => {
-        // fallback to static
-        const p = staticProducts.find(p => p.id === Number(id));
-        if (p) { const fixed = fixProduct(p); setProduct(fixed); setSelectedColor(fixed.colors[0]); }
-        setRelated(staticProducts.filter(p => p.id !== Number(id)).map(fixProduct).slice(0,4));
-      })
-      .finally(() => setLoading(false));
-  }, [id]);
+        if (isMounted && local) {
+          setProduct(local);
+          setSelectedColor(local.colors && Array.isArray(local.colors) ? (local.colors[0] ?? "") : "");
+        }
+        // Load related products
+        try {
+          const res = await productsApi.list({ category: p.category_name, sort:"newest" });
+          const items = ((res.results ?? res) as Product[])
+            .map(toLocal)
+            .map(fixProduct)
+            .filter((p): p is Product => p !== null && p.id !== Number(id))
+            .slice(0, 4);
+          if (isMounted) setRelated(items);
+        } catch (e) {
+          console.log("Error loading related products:", e);
+        }
+      } catch (err) {
+        console.log("Error loading product from API:", err);
+        // Fallback to static product
+        if (isMounted) {
+          const staticProduct = staticProducts.find(p => p.id === Number(id));
+          if (staticProduct) {
+            const fixed = fixProduct(staticProduct as Product);
+            if (fixed) {
+              setProduct(fixed);
+              setSelectedColor(fixed.colors && Array.isArray(fixed.colors) ? (fixed.colors[0] ?? "") : "");
+            }
+          }
+          const relatedItems = staticProducts
+            .filter(p => p.id !== Number(id))
+            .map((p) => fixProduct(p as Product))
+            .filter((p): p is Product => p !== null)
+            .slice(0, 4);
+          setRelated(relatedItems);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    
+    loadProduct();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [id, fixProduct]);
 
   if (loading && !product) return (
     <div style={{ minHeight:"60vh", display:"flex", alignItems:"center", justifyContent:"center", background:"#ffffff" }}>
@@ -158,16 +204,17 @@ export default function ProductDetailPage() {
   );
 
   const inWishlist = isInWishlist(product.id);
+  const priceAsNumber = typeof product.price === "string" ? parseFloat(product.price) : product.price;
 
   const handleAddToCart = async () => {
     if (!selectedSize || !selectedColor) { alert("الرجاء اختيار المقاس واللون"); return; }
-    await addToCart(product.id, product.name, product.price, product.image, selectedSize, selectedColor, qty);
+    await addToCart(product.id, product.name, priceAsNumber, product.image, selectedSize, selectedColor, qty);
     setAdded(true); setTimeout(() => setAdded(false), 2500);
   };
 
   const handleBuyNow = async () => {
     if (!selectedSize || !selectedColor) { alert("الرجاء اختيار المقاس واللون"); return; }
-    await addToCart(product.id, product.name, product.price, product.image, selectedSize, selectedColor, qty);
+    await addToCart(product.id, product.name, priceAsNumber, product.image, selectedSize, selectedColor, qty);
     router.push("/checkout");
   };
 
@@ -206,7 +253,7 @@ export default function ProductDetailPage() {
                 المقاس — <span style={{ color:"#d97706" }}>{selectedSize || "اختر مقاسًا"}</span>
               </p>
               <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
-                {(product.sizes ?? []).map((s: string) => (
+                {(Array.isArray(product.sizes) ? product.sizes : []).map((s: string) => (
                   <button key={s} onClick={() => setSelectedSize(selectedSize===s?"":s)}
                     style={{ width:48, height:48, fontSize:13, fontWeight:700, border:"2px solid", borderRadius:10, cursor:"pointer", transition:"all 0.2s",
                       background:  selectedSize===s ? "#0f172a" : "#ffffff",
@@ -225,7 +272,7 @@ export default function ProductDetailPage() {
                 اللون — <span style={{ color:"#d97706" }}>{selectedColor || "اختر لونًا"}</span>
               </p>
               <div style={{ display:"flex", flexWrap:"wrap", gap:10 }}>
-                {(product.colors ?? []).map((c: string) => (
+                {(Array.isArray(product.colors) ? product.colors : []).map((c: string) => (
                   <button key={c} onClick={() => setSelectedColor(c)} title={c}
                     style={{ width:32, height:32, borderRadius:"50%", border:"3px solid", cursor:"pointer", transition:"all 0.2s",
                       background:  colorHex[c] ?? "#f59e0b",
@@ -240,7 +287,7 @@ export default function ProductDetailPage() {
             <QuantityAdd
               qty={qty} setQty={setQty}
               handleAddToCart={handleAddToCart} handleBuyNow={handleBuyNow}
-              product={product as any} inWishlist={inWishlist}
+              product={product} inWishlist={inWishlist}
               addToWishlist={addToWishlist} removeFromWishlist={removeFromWishlist}
               added={added}
             />
@@ -268,7 +315,16 @@ export default function ProductDetailPage() {
             <p className="section-tag" style={{ marginBottom:10, color:"#d97706" }}>قد يعجبك أيضًا</p>
             <h2 style={{ color:"#0f172a", margin:"0 0 36px", fontSize:"clamp(1.5rem,3vw,2.2rem)" }}>منتجات مشابهة</h2>
             <div className="products-grid-4">
-              {related.map(p => <ProductCard key={p.id} product={p} />)}
+              {related.map(p => {
+                const productData = {
+                  ...p,
+                  price: typeof p.price === "string" ? parseFloat(p.price) : p.price,
+                  inStock: p.inStock || p.in_stock,
+                  sizes: Array.isArray(p.sizes) ? p.sizes : [p.sizes],
+                  colors: Array.isArray(p.colors) ? p.colors : [p.colors],
+                };
+                return <ProductCard key={p.id} product={productData} />;
+              })}
             </div>
           </div>
         </div>

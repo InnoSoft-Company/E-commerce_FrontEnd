@@ -112,6 +112,23 @@ export const authApi = {
     request<User>("/auth/me/update/", { method: "PUT", body: JSON.stringify(data) }, true),
 };
 
+// ── Product Types ──────────────────────────────
+export interface ProductCreateData {
+  name: string;
+  price: string | number;
+  category: number;
+  description?: string;
+  image?: File | string;
+  images?: (File | string)[];
+  in_stock?: boolean;
+  featured?: boolean;
+  trending?: boolean;
+  sizes?: string[];
+  colors?: string[];
+}
+
+export type ProductUpdateData = Partial<ProductCreateData>;
+
 // ── Products ─────────────────────────────────────
 export const productsApi = {
   list: (params: Record<string, string> = {}) => {
@@ -119,14 +136,14 @@ export const productsApi = {
     return request<PaginatedResponse<Product>>(`/products/${qs ? "?" + qs : ""}`);
   },
   get: (id: number) => request<Product>(`/products/${id}/`),
-  create: (data: any) => {
+  create: (data: ProductCreateData) => {
     // Use FormData for File uploads (images)
     const formData = new FormData();
     
     // Text fields
     formData.append("name", data.name);
     formData.append("price", String(data.price));
-    formData.append("category", data.category);
+    formData.append("category", String(data.category));
     formData.append("description", data.description || "");
     
     // Primary image - must be File in FormData so it goes to request.FILES
@@ -139,7 +156,7 @@ export const productsApi = {
     
     // Gallery images - only include File objects
     if (Array.isArray(data.images) && data.images.length > 0) {
-      data.images.forEach((img: any) => {
+      data.images.forEach((img: File | string) => {
         if (img instanceof File) {
           formData.append("images", img);
         }
@@ -154,12 +171,12 @@ export const productsApi = {
     // Sizes and colors - send as JSON strings
     // Filter out empty strings first
     const cleanSizes = (Array.isArray(data.sizes) ? data.sizes : [])
-      .filter((s: any) => typeof s === "string" && s.trim().length > 0)
-      .map((s: any) => s.trim());
+      .filter((s: string) => typeof s === "string" && s.trim().length > 0)
+      .map((s: string) => s.trim());
     
     const cleanColors = (Array.isArray(data.colors) ? data.colors : [])
-      .filter((c: any) => typeof c === "string" && c.trim().length > 0)
-      .map((c: any) => c.trim());
+      .filter((c: string) => typeof c === "string" && c.trim().length > 0)
+      .map((c: string) => c.trim());
     
     formData.append("sizes", JSON.stringify(cleanSizes));
     formData.append("colors", JSON.stringify(cleanColors));
@@ -171,12 +188,12 @@ export const productsApi = {
     
     return requestFormData<Product>("/products/", formData, true);
   },
-  update: (id: number, data: any) => {
+  update: (id: number, data: ProductUpdateData) => {
     const formData = new FormData();
     
     if (data.name) formData.append("name", data.name);
     if (data.price) formData.append("price", String(data.price));
-    if (data.category) formData.append("category", data.category);
+    if (data.category !== undefined) formData.append("category", String(data.category));
     if (data.description !== undefined) formData.append("description", data.description);
     
     // Primary image - must be File in FormData
@@ -190,7 +207,7 @@ export const productsApi = {
     
     // Gallery images
     if (Array.isArray(data.images) && data.images.length > 0) {
-      data.images.forEach((img: any) => {
+      data.images.forEach((img: File | string) => {
         if (img instanceof File) {
           formData.append("images", img);
         }
@@ -203,12 +220,12 @@ export const productsApi = {
     
     // Sizes and colors
     const cleanSizes = (Array.isArray(data.sizes) ? data.sizes : [])
-      .filter((s: any) => typeof s === "string" && s.trim().length > 0)
-      .map((s: any) => s.trim());
+      .filter((s: string) => typeof s === "string" && s.trim().length > 0)
+      .map((s: string) => s.trim());
     
     const cleanColors = (Array.isArray(data.colors) ? data.colors : [])
-      .filter((c: any) => typeof c === "string" && c.trim().length > 0)
-      .map((c: any) => c.trim());
+      .filter((c: string) => typeof c === "string" && c.trim().length > 0)
+      .map((c: string) => c.trim());
     
     formData.append("sizes", JSON.stringify(cleanSizes));
     formData.append("colors", JSON.stringify(cleanColors));
@@ -329,17 +346,18 @@ export interface Tokens {
 export interface Product {
   id: number;
   name: string;
-  price: string;
+  price: string | number;
   category: number;
   category_name: string;
   image: string;
   images: string[];
   description: string;
-  sizes: string[];
-  colors: string[];
+  sizes: string | string[];
+  colors: string | string[];
   rating: number;
   reviews: number;
   in_stock: boolean;
+  inStock: boolean;
   featured: boolean;
   trending: boolean;
   created_at: string;

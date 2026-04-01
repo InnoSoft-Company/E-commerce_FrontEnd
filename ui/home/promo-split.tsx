@@ -44,8 +44,9 @@ export default function PromoSplit() {
         {/* Image side */}
         <div className="promo-img-side group">
           <Image fill sizes="(max-width:820px) 100vw, 50vw" src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=900&q=85" alt="خصومات الربيع"
-            style={{ objectFit: "cover", transition: "transform 0.75s ease, filter 0.5s ease" }}
-            className="group-hover:scale-105 group-hover:brightness-90" />
+            // style={{ objectFit: "cover", transition: "transform 0.85s ease, filter 0.85s ease" }}
+            className="promo-img group-hover:scale-105 group-hover:filter-none duration-300"
+          />
 
           {/* Sale badge */}
           <div style={{ position: "absolute", top: 28, right: 28 }}>
