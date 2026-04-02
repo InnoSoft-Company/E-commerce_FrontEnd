@@ -1,13 +1,20 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Save, Loader2, AlertCircle, X, Image as ImageIcon } from "lucide-react";
 import { productsApi } from "@/src/lib/api";
 
+interface ApiError {
+  data?: Record<string, string[] | string>;
+  status?: number;
+  message?: string;
+}
+
 const catOptions = [
-  { value:"Women", label:"نساء" }, { value:"Men", label:"رجال" },
-  { value:"Kids", label:"أطفال" }, { value:"Accessories", label:"إكسسوارات" },
+  { value: 1, label: "نساء" }, { value: 2, label: "رجال" },
+  { value: 3, label: "أطفال" }, { value: 4, label: "إكسسوارات" },
 ];
 
 export default function AdminAddProduct() {
@@ -15,7 +22,7 @@ export default function AdminAddProduct() {
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState("");
   const [form, setForm] = useState({
-    name:"", price:"", category:"Women", image: null as File | null,
+    name:"", price:"", category: 1, image: null as File | null,
     description:"", sizes:[] as string[], colors:[] as string[],
     images: [] as File[],
     in_stock:true, featured:false, trending:false,
@@ -71,7 +78,7 @@ export default function AdminAddProduct() {
       await productsApi.create({
         name:        form.name.trim(),
         price:       String(parseFloat(form.price)),
-        category:    form.category.trim(),
+        category:    form.category,
         image:       form.image,
         images:      form.images,
         description: form.description.trim(),
@@ -82,9 +89,10 @@ export default function AdminAddProduct() {
         trending:    form.trending,
       });
       router.push("/admin/products");
-    } catch (err: any) {
-      console.error("Product creation error:", err?.data || err);
-      const msg = Object.values(err?.data ?? {}).flat().join(" ") || "حدث خطأ عند الإضافة";
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      console.error("Product creation error:", apiError?.data || apiError);
+      const msg = Object.values(apiError?.data ?? {}).flat().join(" ") || "حدث خطأ عند الإضافة";
       setError(String(msg));
     } finally { setSaving(false); }
   };
@@ -135,9 +143,9 @@ export default function AdminAddProduct() {
                   </div>
                   <div>
                     <L c="التصنيف"/>
-                    <select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}
+                    <select value={String(form.category)} onChange={e=>setForm({...form,category:parseInt(e.target.value, 10)})}
                       className="input-field" style={{fontSize:13}}>
-                      {catOptions.map(c=><option key={c.value} value={c.value}>{c.label}</option>)}
+                      {catOptions.map(c=><option key={c.value} value={String(c.value)}>{c.label}</option>)}
                     </select>
                   </div>
                 </div>
@@ -158,7 +166,7 @@ export default function AdminAddProduct() {
                   </div>
                   {previews.image && (
                     <div style={{ position:"relative", display:"flex", alignItems:"center", justifyContent:"center", width:"100%", height:120, borderRadius:10, overflow:"hidden", background:"rgba(0,0,0,0.3)" }}>
-                      <img src={previews.image} alt="preview" style={{ maxWidth:"100%", maxHeight:"100%", objectFit:"contain" }}/>
+                      <Image src={previews.image} alt="preview" width={300} height={120} style={{ maxWidth:"100%", maxHeight:"100%", objectFit:"contain" }}/>
                     </div>
                   )}
                 </div>
@@ -181,7 +189,8 @@ export default function AdminAddProduct() {
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(80px, 1fr))", gap:10 }}>
                       {previews.images.map((preview, idx) => (
                         <div key={idx} style={{ position:"relative", width:"100%", paddingBottom:"100%", borderRadius:8, overflow:"hidden", background:"rgba(0,0,0,0.3)" }}>
-                          <img src={preview} alt={`gallery-${idx}`}
+                          <Image src={preview} alt={`gallery-${idx}`}
+                            fill
                             style={{ position:"absolute", top:0, left:0, width:"100%", height:"100%", objectFit:"cover" }}/>
                           <button type="button" onClick={()=>removeGalleryImage(idx)}
                             style={{ position:"absolute", top:4, right:4, width:20, height:20, borderRadius:"50%", background:"rgba(255,0,0,0.8)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"white", fontSize:12 }}>

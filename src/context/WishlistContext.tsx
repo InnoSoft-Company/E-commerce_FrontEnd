@@ -27,17 +27,27 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
   // Sync with backend when logged in
   useEffect(() => {
-    if (!isAuthenticated) { setWishlist([]); return; }
-    setLoading(true);
-    wishlistApi.list()
-      .then(items => setWishlist(items.map(i => ({
-        id: i.product.id,
-        name: i.product.name,
-        price: parseFloat(i.product.price),
-        image: i.product.image,
-      }))))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    const syncWishlist = async () => {
+      if (!isAuthenticated) {
+        setWishlist([]);
+        return;
+      }
+      setLoading(true);
+      try {
+        const items = await wishlistApi.list();
+        setWishlist(items.map(i => ({
+          id: i.product.id,
+          name: i.product.name,
+          price: typeof i.product.price === 'string' ? parseFloat(i.product.price) : i.product.price,
+          image: i.product.image,
+        })));
+      } catch {
+        // Handle error silently
+      } finally {
+        setLoading(false);
+      }
+    };
+    syncWishlist();
   }, [isAuthenticated]);
 
   const isInWishlist = (id: number) => wishlist.some(w => w.id === id);

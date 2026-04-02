@@ -52,30 +52,30 @@ export default function WishlistPage() {
             <div className="wishlist-grid">
               {wishlist.map(item => (
                 <div key={item.id} className="wishlist-card group">
-                  {/* Image */}
-                  <div style={{ position:"relative", aspectRatio:"3/4", overflow:"hidden", borderRadius:12, background:"#f1f5f9", marginBottom:12 }}>
-                    <Image fill src={normalizeImageUrl(item.image)} alt={item.name} style={{ objectFit:"cover", transition:"transform 0.6s ease" }} className="wishlist-img"/>
+                  <Link href={`/product/${item.id}`}>
+                    {/* Image */}
+                    <div style={{ position:"relative", aspectRatio:"3/4", overflow:"hidden", borderRadius:12, background:"#f1f5f9", marginBottom:12 }}>
+                      <Image fill src={normalizeImageUrl(item.image)} alt={item.name} style={{ objectFit:"cover", transition:"transform 0.6s ease" }} className="wishlist-img"/>
 
-                    {/* Remove button */}
-                    <button
-                      onClick={() => removeFromWishlist(item.id)}
-                      className="wishlist-remove"
-                      title="إزالة من المفضلة"
-                    >
-                      <X size={14} strokeWidth={2}/>
-                    </button>
+                      {/* Remove button */}
+                      <button
+                        onClick={() => removeFromWishlist(item.id)}
+                        className="wishlist-remove"
+                        title="إزالة من المفضلة"
+                      >
+                        <X size={14} strokeWidth={2}/>
+                      </button>
 
-                    {/* Add to cart overlay */}
-                    <button
-                      onClick={() => addToCart(item.id, item.name, item.price, item.image, "M", "Black")}
-                      className="wishlist-cart-btn"
-                    >
-                      <ShoppingCart size={15} strokeWidth={2}/> أضف إلى السلة
-                    </button>
-                  </div>
+                      {/* Add to cart overlay */}
+                      <button
+                        onClick={() => addToCart(item.id, item.name, item.price, item.image, "M", "Black")}
+                        className="wishlist-cart-btn"
+                      >
+                        <ShoppingCart size={15} strokeWidth={2}/> أضف إلى السلة
+                      </button>
+                    </div>
 
-                  {/* Info */}
-                  <Link href={`/product/${item.id}`} style={{ textDecoration:"none" }}>
+                    {/* Info */}
                     <h3 style={{ fontSize:14, fontWeight:600, color:"#0f172a", margin:"0 0 5px", transition:"color 0.2s", lineHeight:1.4 }} className="wishlist-name">
                       {item.name}
                     </h3>

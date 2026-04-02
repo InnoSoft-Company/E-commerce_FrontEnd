@@ -244,7 +244,7 @@ export default function ProductDetailPage() {
           <Images product={product} imgIdx={imgIdx} setImgIdx={setImgIdx} />
 
           {/* Info */}
-          <div>
+          <div className="sticky top-24 self-start">
             <Info product={product} />
 
             {/* Sizes */}

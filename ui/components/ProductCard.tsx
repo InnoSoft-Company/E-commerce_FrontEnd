@@ -129,7 +129,7 @@ export function ProductCard({ product }: { product: Product }) {
 
         {/* Info */}
         <div className="pc-info">
-          <p className="pc-cat">{product.category}</p>
+          <p className="pc-cat">{product.category_name}</p>
           <h3 className="pc-name">{product.name}</h3>
 
           <div className="pc-row">

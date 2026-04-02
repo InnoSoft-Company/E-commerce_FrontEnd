@@ -1,15 +1,20 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Save, Loader2, AlertCircle, Package } from "lucide-react";
 import { productsApi, type Product } from "@/src/lib/api";
 
+interface ApiError {
+  data?: Record<string, string[] | string>;
+  status?: number;
+}
+
 const catOptions = [
-  { value:"Women",label:"نساء" },{ value:"Men",label:"رجال" },
-  { value:"Kids",label:"أطفال" },{ value:"Accessories",label:"إكسسوارات" },
+  { value: 1, label: "نساء" }, { value: 2, label: "رجال" },
+  { value: 3, label: "أطفال" }, { value: 4, label: "إكسسوارات" },
 ];
-const catNameMap: Record<number,string> = { 1:"Women", 2:"Men", 3:"Kids", 4:"Accessories" };
 
 export default function AdminEditProduct() {
   const { id }  = useParams<{id:string}>();
@@ -20,7 +25,7 @@ export default function AdminEditProduct() {
   const [error,    setError]    = useState("");
   const [saved,    setSaved]    = useState(false);
   const [form, setForm] = useState({
-    name:"", price:"", category:"Women", image: null as File | string | null,
+    name:"", price:"", category: 1, image: undefined as File | string | undefined,
     description:"", sizes:[] as string[], colors:[] as string[],
     in_stock:true, featured:false, trending:false,
   });
@@ -32,12 +37,12 @@ export default function AdminEditProduct() {
     productsApi.get(Number(id))
       .then(p => {
         // تنظيف البيانات: تحويل sizes و colors إلى arrays حقيقية من strings
-        const cleanArray = (arr: any): string[] => {
+        const cleanArray = (arr: unknown): string[] => {
           if (!Array.isArray(arr)) return [];
           
           const result: string[] = [];
           
-          const flatten = (item: any) => {
+          const flatten = (item: unknown) => {
             if (typeof item === "string") {
               // إذا كانت JSON string، حولها لقيمة حقيقية
               if (item.startsWith("[")) {
@@ -62,8 +67,8 @@ export default function AdminEditProduct() {
 
         setProduct(p);
         setForm({
-          name: p.name, price: String(parseFloat(p.price as any)),
-          category: p.category_name || catNameMap[p.category as any] || "Women",
+          name: p.name, price: String(parseFloat(String(p.price))),
+          category: typeof p.category === 'number' ? p.category : 1,
           image: p.image, description: p.description,
           sizes: cleanArray(p.sizes),
           colors: cleanArray(p.colors),
@@ -104,8 +109,8 @@ export default function AdminEditProduct() {
       const payload = {
         name: form.name.trim(), 
         price: String(parseFloat(form.price)),
-        category: form.category.trim(),
-        image: form.image,
+        category: form.category,
+        image: form.image || undefined,
         description: form.description.trim(),
         sizes: safeSizes,
         colors: safeColors,
@@ -118,10 +123,11 @@ export default function AdminEditProduct() {
       
       await productsApi.update(Number(id), payload);
       setSaved(true); setTimeout(()=>{ setSaved(false); router.push("/admin/products"); }, 1200);
-    } catch (err:any) {
-      console.error("Product update error:", err?.data || err);
-      const errorMsg = err?.data?.non_field_errors?.[0] || 
-                       Object.values(err?.data||{})
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      console.error("Product update error:", apiError?.data || apiError);
+      const errorMsg = apiError?.data?.non_field_errors?.[0] as string || 
+                       Object.values(apiError?.data||{})
                          .flat()
                          .filter(e => typeof e === 'string')
                          .join(" ") || 
@@ -152,8 +158,8 @@ export default function AdminEditProduct() {
     <div>
       <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:24 }}>
         <Link href="/admin/products" style={{ fontSize:13, fontWeight:600, color:"rgba(255,255,255,0.42)", textDecoration:"none" }}
-          onMouseEnter={e=>{(e.currentTarget as HTMLAnchorElement).style.color="#f59e0b"}}
-          onMouseLeave={e=>{(e.currentTarget as HTMLAnchorElement).style.color="rgba(255,255,255,0.42)"}}>
+          onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>)=>{(e.currentTarget as HTMLAnchorElement).style.color="#f59e0b"}}
+          onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>)=>{(e.currentTarget as HTMLAnchorElement).style.color="rgba(255,255,255,0.42)"}}>
           ← المنتجات
         </Link>
         <span style={{ color:"rgba(255,255,255,0.18)" }}>|</span>
@@ -178,8 +184,8 @@ export default function AdminEditProduct() {
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
                   <div><L c="السعر ($)"/><input type="number" step="0.01" min="0" value={form.price} onChange={e=>setForm({...form,price:e.target.value})} className="input-field" style={{fontSize:13}}/></div>
                   <div><L c="التصنيف"/>
-                    <select value={form.category} onChange={e=>setForm({...form,category:e.target.value})} className="input-field" style={{fontSize:13}}>
-                      {catOptions.map(c=><option key={c.value} value={c.value}>{c.label}</option>)}
+                    <select value={String(form.category)} onChange={e=>setForm({...form,category:parseInt(e.target.value, 10)})} className="input-field" style={{fontSize:13}}>
+                      {catOptions.map(c=><option key={c.value} value={String(c.value)}>{c.label}</option>)}
                     </select>
                   </div>
                 </div>
@@ -199,16 +205,18 @@ export default function AdminEditProduct() {
                         background:"rgba(245,158,11,0.1)", border:"1.5px dashed #f59e0b",
                         color:"#f59e0b", textAlign:"center", cursor:"pointer", fontWeight:600, fontSize:13,
                         transition:"all 0.2s"
-                      }} onMouseEnter={e=>{e.currentTarget.style.background="rgba(245,158,11,0.15)"}}
-                         onMouseLeave={e=>{e.currentTarget.style.background="rgba(245,158,11,0.1)"}}>
+                      }} onMouseEnter={(e: React.MouseEvent<HTMLLabelElement>)=>{e.currentTarget.style.background="rgba(245,158,11,0.15)"}}
+                         onMouseLeave={(e: React.MouseEvent<HTMLLabelElement>)=>{e.currentTarget.style.background="rgba(245,158,11,0.1)"}}> 
                         📁 اختر صورة جديدة
                       </label>
                     </div>
                     {previews.image && (
                       <div style={{ width:120, height:120, borderRadius:9, overflow:"hidden", border:"1px solid rgba(255,255,255,0.1)" }}>
-                        <img 
+                        <Image 
                           src={previews.image} 
-                          alt="preview" 
+                          alt="معاينة الصورة"
+                          width={120}
+                          height={120}
                           style={{width:"100%", height:"100%", objectFit:"cover"}}
                         />
                       </div>

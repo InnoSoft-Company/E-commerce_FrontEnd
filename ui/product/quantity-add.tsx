@@ -51,7 +51,7 @@ export default function QuantityAdd({
           onClick={() =>
             inWishlist
               ? removeFromWishlist(product.id)
-              : addToWishlist({ id: product.id, name: product.name, price: product.price, image: product.image })
+              : addToWishlist({ id: product.id, name: product.name, price: typeof product.price === 'string' ? parseFloat(product.price) : product.price, image: product.image })
           }
           className={`qa-wish-btn${inWishlist ? " active" : ""}`}
         >
