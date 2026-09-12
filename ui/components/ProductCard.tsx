@@ -83,7 +83,7 @@ export function ProductCard({ product }: { product: Product }) {
           {/* Badges */}
           <div className="pc-badges">
             {product.featured && <span className="pc-badge pc-badge--dark">مميز</span>}
-            {product.trending  && <span className="pc-badge pc-badge--new">رائج 🔥</span>}
+            {product.trending  && <span className="pc-badge pc-badge--new">رائج</span>}
             {!product.inStock  && <span className="pc-badge pc-badge--out">نفذ</span>}
           </div>
 
