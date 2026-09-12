@@ -109,6 +109,7 @@ export default function ProductDetailPage() {
     }
     return [];
   }
+  
   const fixProduct = useCallback((p: Product | null): Product | null => {
     if (!p) return null;
     // Get the sizes as array

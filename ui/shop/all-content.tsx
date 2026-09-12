@@ -18,7 +18,7 @@ export default function ShopContent() {
   const [selectedSize,     setSelectedSize]      = useState("");
   const [priceRange,       setPriceRange]        = useState<[number,number]>([0,500]);
   const [sortBy,           setSortBy]            = useState("newest");
-  const [showFilters,      setShowFilters]        = useState(false);
+  const [showFilters,      setShowFilters]       = useState(false);
   const [products,         setProducts]          = useState<any[]>(staticProducts);
   const [loading,          setLoading]           = useState(true);
 
